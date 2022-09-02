@@ -3,6 +3,7 @@
 namespace Recruitment\Cart;
 
 use OutOfBoundsException;
+use Recruitment\Cart\Exception\QuantityTooLowException;
 use Recruitment\Entity\Order;
 use Recruitment\Entity\Product;
 use Throwable;
@@ -13,29 +14,40 @@ class Cart
      * @var Item[]
      */
     private $items = [];
-    
+
+    /**
+     * @throws QuantityTooLowException
+     */
     public function addProduct(Product $product, int $quantity = 1): self
     {
-        $key = array_search($product, $this->items, true);
-        if ($key !== false) {
-            $this->items[$key]->setQuantity($this->items[$key]->getQuantity() + $quantity);
-            return $this;
+        foreach ($this->items as $key => $item) {
+            if ($product->getId() === $item->getProduct()->getId()) {
+                $this->items[$key]->setQuantity($this->items[$key]->getQuantity() + $quantity);
+                return $this;
+            }
         }
-        $this->items[] = new Item($product, $quantity);;
+        $this->items[] = new Item($product, $quantity);
         return $this;
     }
 
     public function removeProduct(Product $product): void
     {
-        $key = array_search($product, $this->items, true);
-        if($key !== FALSE) {
-            unset($this->items[$key]);
+        if ($product->getId() === null) {
+            return;
+        }
+        foreach ($this->items as $key => $item) {
+            if ($product->getId() === $item->getProduct()->getId()) {
+                array_splice($this->items, $key, 1);
+            }
         }
     }
 
-    public function getItems(): int
+    /**
+     * @return Item[]
+     */
+    public function getItems(): array
     {
-        return count($this->items);
+        return $this->items;
     }
 
     public function getItem(int $index): Item
@@ -56,14 +68,25 @@ class Cart
         return $sum;
     }
 
+    /**
+     * @throws QuantityTooLowException
+     */
     public function setQuantity(Product $product, int $quantity): void
     {
+        foreach ($this->items as $key => $item) {
+            if ($product->getId() === $item->getProduct()->getId()) {
+                $this->items[$key]->setQuantity($quantity);
+                return;
+            }
+        }
         $this->addProduct($product, $quantity);
     }
 
     public function checkout(int $id): Order
     {
-        return new Order($id, $this->items);
+        $order = new Order($id, $this->items);
+        $this->items = [];
+        return $order;
     }
 
     public function getTotalPriceGross()

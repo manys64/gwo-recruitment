@@ -13,7 +13,7 @@ class Product
     private $minimumQuantity;
     private $gross = 0;
 
-    public function getId(): int
+    public function getId(): ?int
     {
         return $this->id;
     }
@@ -35,7 +35,7 @@ class Product
         return $this;
     }
 
-    public function getUnitPrice(): float
+    public function getUnitPrice(): int
     {
         return $this->unitPrice;
     }
@@ -54,7 +54,7 @@ class Product
 
     public function getMinimumQuantity(): int
     {
-        return $this->minimumQuantity;
+        return $this->minimumQuantity ?: 1;
     }
 
     public function setMinimumQuantity(int $minimumQuantity): self

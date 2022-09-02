@@ -13,7 +13,7 @@ class Item
 
     public function __construct(Product $product, int $quantity)
     {
-        if ($this->product->getMinimumQuantity() <= $quantity) {
+        if ($product->getMinimumQuantity() > $quantity) {
             throw new InvalidArgumentException;
         }
         $this->product = $product;
@@ -41,10 +41,15 @@ class Item
      */
     public function setQuantity(int $quantity): self
     {
-        if ($this->product->getMinimumQuantity() <= $quantity) {
-            throw new QuantityTooLowException();
+        if ($this->product->getMinimumQuantity() > $quantity) {
+            throw new QuantityTooLowException($quantity);
         }
         $this->quantity = $quantity;
         return $this;
+    }
+
+    public function getTotalPrice()
+    {
+        return $this->product->getUnitPrice() * $this->quantity;
     }
 }

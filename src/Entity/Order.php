@@ -29,19 +29,21 @@ class Order
     {
         $itemsArray = [];
         foreach ($this->items as $item) {
+            $tax = 1 + ($item->getProduct()->getGross() / 100);
             $itemsArray[] = [
                 'id' => $item->getProduct()->getId(),
                 'quantity' => $item->getQuantity(),
                 'total_price' => $item->getProduct()->getUnitPrice() * $item->getQuantity(),
                 'gross' => $item->getProduct()->getGross() . '%',
-                'grossPrice' => $item->getProduct()->getUnitPrice()
-                    + ($item->getProduct()->getUnitPrice() * $item->getProduct()->getGross()),
-                'getTotalPriceGross' => $this->getTotalPriceGross(),
+                'grossPrice' => $item->getProduct()->getUnitPrice() * $tax,
+                'getTotalPriceGross' => ($item->getQuantity() * $item->getProduct()->getUnitPrice()) * $tax,
             ];
         }
         return [
             'id' => $this->id,
             'items' => $itemsArray,
+            'total_price' => $this->getTotalPrice(),
+            'total_price_gross' => $this->getTotalPriceGross(),
         ];
     }
 
@@ -51,6 +53,15 @@ class Order
         foreach ($this->items as $item) {
             $tax = 1 + ($item->getProduct()->getGross() / 100);
             $sum += ($item->getQuantity() * $item->getProduct()->getUnitPrice()) * $tax;
+        }
+        return $sum;
+    }
+
+    private function getTotalPrice(): float
+    {
+        $sum = 0;
+        foreach ($this->items as $item) {
+            $sum += $item->getQuantity() * $item->getProduct()->getUnitPrice();
         }
         return $sum;
     }
