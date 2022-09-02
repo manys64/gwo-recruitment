@@ -16,13 +16,14 @@ class CartTest extends TestCase
      */
     public function itAddsOneProduct(): void
     {
-        $product = $this->buildTestProduct(1, 15000);
+        $product = $this->buildTestProduct(1, 15000, 5);
 
         $cart = new Cart();
         $cart->addProduct($product, 1);
 
         $this->assertCount(1, $cart->getItems());
         $this->assertEquals(15000, $cart->getTotalPrice());
+        $this->assertEquals(15750, $cart->getTotalPriceGross());
         $this->assertEquals($product, $cart->getItem(0)->getProduct());
     }
 
@@ -120,8 +121,8 @@ class CartTest extends TestCase
     public function itClearsCartAfterCheckout(): void
     {
         $cart = new Cart();
-        $cart->addProduct($this->buildTestProduct(1, 15000));
-        $cart->addProduct($this->buildTestProduct(2, 10000), 2);
+        $cart->addProduct($this->buildTestProduct(1, 15000, 23));
+        $cart->addProduct($this->buildTestProduct(2, 10000, 23), 2);
 
         $order = $cart->checkout(7);
 
@@ -129,8 +130,8 @@ class CartTest extends TestCase
         $this->assertEquals(0, $cart->getTotalPrice());
         $this->assertInstanceOf(Order::class, $order);
         $this->assertEquals(['id' => 7, 'items' => [
-            ['id' => 1, 'quantity' => 1, 'total_price' => 15000],
-            ['id' => 2, 'quantity' => 2, 'total_price' => 20000],
+            ['id' => 1, 'quantity' => 1, 'total_price' => 15000, 'gross' => 23, 'grossPrice' => 18450, 'getTotalPriceGross' => 18450],
+            ['id' => 2, 'quantity' => 2, 'total_price' => 20000, 'gross' => 23, 'grossPrice' => 12300, 'getTotalPriceGross' => 24600],
         ], 'total_price' => 35000], $order->getDataForView());
     }
 
@@ -144,8 +145,8 @@ class CartTest extends TestCase
         ];
     }
 
-    private function buildTestProduct(int $id, int $price): Product
+    private function buildTestProduct(int $id, int $price, int $gross = 0): Product
     {
-        return (new Product())->setId($id)->setUnitPrice($price);
+        return (new Product())->setId($id)->setUnitPrice($price)->setGross($gross);
     }
 }
